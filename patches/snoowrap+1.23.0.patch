@@ -1,0 +1,150 @@
+diff --git a/node_modules/snoowrap/dist/objects/Listing.d.ts b/node_modules/snoowrap/dist/objects/Listing.d.ts
+index caebb3d..7fb0648 100644
+--- a/node_modules/snoowrap/dist/objects/Listing.d.ts
++++ b/node_modules/snoowrap/dist/objects/Listing.d.ts
+@@ -4,8 +4,8 @@ export default class Listing<T> extends Array<T> {
+   constructor(options: any, _r: Snoowrap);
+   isFinished: boolean;
+   is_finished: boolean;
+-  fetchMore(options: FetchMoreOptions): Listing<T>;
+-  fetchAll(options?: FetchMoreOptions): Listing<T>;
++  fetchMore(options: FetchMoreOptions): Promise<Listing<T>>;
++  fetchAll(options?: FetchMoreOptions): Promise<Listing<T>>;
+   /* @deprecated */ fetchUntil(options?: FetchMoreOptions): Listing<T>;
+   toJSON(): T[];
+ }
+diff --git a/node_modules/snoowrap/dist/objects/Listing.js b/node_modules/snoowrap/dist/objects/Listing.js
+index f0fac3c..f4efa98 100644
+--- a/node_modules/snoowrap/dist/objects/Listing.js
++++ b/node_modules/snoowrap/dist/objects/Listing.js
+@@ -124,21 +124,21 @@ var Listing = class Listing extends Array {
+   get isFinished() {
+     // The process of checking whether a Listing is 'finished' varies depending on what kind of Listing it is.
+     return this._isCommentList
+-    /**
+-     * For comment Listings (i.e. Listings containing comments and comment replies, sourced by `more` objects): A Listing is
+-     * *never* finished if it has a cached lookahead (i.e. extra items that were fetched from a previous request). If there is
+-     * no cached lookahead, a Listing is finished iff it has an empty `more` object.
+-     */
+-    ? (0, _lodash.isEmpty)(this._cachedLookahead) && !!this._more && (0, _lodash.isEmpty)(this._more.children)
+-    /**
+-     * For non-comment Listings: A Listing is always finished if it has no URI (since there would be nowhere to fetch items
+-     * from). If it has a URI, a Listing is finished iff its `before` and `after` query are both `null`. This is because reddit
+-     * returns a value of `null` as the `after` and `before` parameters to signify that a Listing is complete.
+-     *
+-     * It is important to check for `null` here rather than any falsey value, because when an empty Listing is initialized, its
+-     * `after` and `before` properties are both `undefined`, but calling these empty Listings `finished` would be incorrect.
+-     */
+-    : !this._uri || this._query.after === null && this._query.before === null;
++      /**
++       * For comment Listings (i.e. Listings containing comments and comment replies, sourced by `more` objects): A Listing is
++       * *never* finished if it has a cached lookahead (i.e. extra items that were fetched from a previous request). If there is
++       * no cached lookahead, a Listing is finished iff it has an empty `more` object.
++       */
++      ? (0, _lodash.isEmpty)(this._cachedLookahead) && !!this._more && (0, _lodash.isEmpty)(this._more.children)
++      /**
++       * For non-comment Listings: A Listing is always finished if it has no URI (since there would be nowhere to fetch items
++       * from). If it has a URI, a Listing is finished iff its `before` and `after` query are both `null`. This is because reddit
++       * returns a value of `null` as the `after` and `before` parameters to signify that a Listing is complete.
++       *
++       * It is important to check for `null` here rather than any falsey value, because when an empty Listing is initialized, its
++       * `after` and `before` properties are both `undefined`, but calling these empty Listings `finished` would be incorrect.
++       */
++      : !this._uri || this._query.after === null && this._query.before === null;
+   }
+ 
+   get is_finished() {
+@@ -178,10 +178,10 @@ var Listing = class Listing extends Array {
+     var parsedOptions = (0, _lodash.defaults)(typeof options === 'number' ? {
+       amount: options
+     } : (0, _lodash.clone)(options), // Accept either `skip_replies` or `skipReplies` for backwards compatibility.
+-    {
+-      append: true,
+-      skipReplies: options.skip_replies
+-    });
++      {
++        append: true,
++        skipReplies: options.skip_replies
++      });
+ 
+     if (typeof parsedOptions.amount !== 'number' || Number.isNaN(parsedOptions.amount)) {
+       throw new _errors.InvalidMethodCallError('Failed to fetch Listing. (`amount` parameter was missing or invalid)');
+@@ -191,7 +191,7 @@ var Listing = class Listing extends Array {
+       return parsedOptions.append ? this._clone() : this._clone()._empty();
+     }
+ 
+-    if (this._cachedLookahead) {
++    if (this._cachedLookahead && this._cachedLookahead.length > 0) {
+       var cloned = this._clone();
+ 
+       cloned.push.apply(cloned, _toConsumableArray(cloned._cachedLookahead.splice(0, parsedOptions.amount)));
+@@ -329,8 +329,8 @@ var Listing = class Listing extends Array {
+ 
+   _clone() {
+     var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+-        _ref$deep = _ref.deep,
+-        deep = _ref$deep === void 0 ? false : _ref$deep;
++      _ref$deep = _ref.deep,
++      deep = _ref$deep === void 0 ? false : _ref$deep;
+ 
+     var properties = (0, _lodash.pick)(this, Object.keys(INTERNAL_DEFAULTS));
+     properties._query = (0, _lodash.clone)(properties._query);
+diff --git a/node_modules/snoowrap/dist/snoowrap.d.ts b/node_modules/snoowrap/dist/snoowrap.d.ts
+index a9d9465..690403d 100644
+--- a/node_modules/snoowrap/dist/snoowrap.d.ts
++++ b/node_modules/snoowrap/dist/snoowrap.d.ts
+@@ -34,7 +34,7 @@ declare class Snoowrap {
+   static fromAuthCode(options: Snoowrap.AuthCodeOptions): Promise<Snoowrap>;
+   static fromApplicationOnlyAuth(options: Snoowrap.AuthOnlyOptions): Promise<Snoowrap>;
+ 
+-  _newObject (objectType: string, content: object[]|object, _hasFetched?: boolean): Array<unknown>|object;
++  _newObject(objectType: string, content: object[] | object, _hasFetched?: boolean): Array<unknown> | object;
+   static noConflict(): typeof Snoowrap;
+ 
+   accessToken: string;
+@@ -55,7 +55,7 @@ declare class Snoowrap {
+   composeMessage(options: Snoowrap.ComposeMessageParams): Promise<any>;
+   config(opts?: Snoowrap.ConfigOptions): Snoowrap.ConfigOptions;
+   createLivethread(options: LiveThreadSettings): Promise<_LiveThread>;
+-  createMultireddit(options: MultiRedditProperties & { name: string; subreddits: _Subreddit[] | string[]}): Promise<_MultiReddit>;
++  createMultireddit(options: MultiRedditProperties & { name: string; subreddits: _Subreddit[] | string[] }): Promise<_MultiReddit>;
+   createSubreddit(options: SubredditSettings): Promise<_Subreddit>;
+   credentialedClientRequest(options?: RequestOptions): Promise<any>;
+   getBlockedUsers(): Promise<_RedditUser[]>;
+@@ -80,7 +80,7 @@ declare class Snoowrap {
+   getNew(subredditName?: string, options?: ListingOptions): Promise<_Listing<_Submission>>;
+   getNewCaptchaIdentifier(): Promise<string>;
+   getNewComments(subredditName?: string, options?: ListingOptions): Promise<_Listing<_Comment>>;
+-  getContentByIds(ids: Array<_Submission | _Comment | string>) : Promise<_Listing<_Submission | _Comment>>;
++  getContentByIds(ids: Array<_Submission | _Comment | string>): Promise<_Listing<_Submission | _Comment>>;
+   getNewModmailConversations(options?: ListingOptions & { entity?: string }): Promise<_Listing<_ModmailConversation>>;
+   createModmailDiscussion(options: { body: string, subject: string, srName: string }): Promise<_ModmailConversation>;
+   getNewModmailConversation(id: string): Promise<_ModmailConversation>;
+@@ -88,7 +88,7 @@ declare class Snoowrap {
+   markNewModmailConversationsAsUnread(convs: _ModmailConversation[]): Promise<void>;
+   getNewModmailSubreddits(): Promise<_Subreddit[]>;
+   getUnreadNewModmailConversationsCount(): Promise<{ highlighted: number, notifications: number, archived: number, appeals: number, new: number, inprogress: number, mod: number }>;
+-  bulkReadNewModmail(subs: Array<_Subreddit | string>, state: 'new'|'inprogress'|'mod'|'notifications'|'archived'|'appeals'|'highlighted'|'all'): Promise<_Listing<_ModmailConversation>>;
++  bulkReadNewModmail(subs: Array<_Subreddit | string>, state: 'new' | 'inprogress' | 'mod' | 'notifications' | 'archived' | 'appeals' | 'highlighted' | 'all'): Promise<_Listing<_ModmailConversation>>;
+   getNewSubreddits(options?: ListingOptions): Promise<_Listing<_Subreddit>>;
+   getOauthScopeList(): Promise<{ [key: string]: { description: string; id: string; name: string } }>;
+   getPopularSubreddits(options?: ListingOptions): Promise<_Listing<_Subreddit>>;
+@@ -170,7 +170,7 @@ declare namespace Snoowrap {
+ 
+   export type GrantType = 'client_credentials' | 'https://oauth.reddit.com/grants/installed_client'
+ 
+-  interface BaseAuthOnlyOptions extends BaseAuthOptions{
++  interface BaseAuthOnlyOptions extends BaseAuthOptions {
+     userAgent: string
+   }
+ 
+@@ -183,7 +183,8 @@ declare namespace Snoowrap {
+   interface AuthOnlyInstalledOptions extends BaseAuthOnlyOptions {
+     clientSecret?: string
+     grantType?: 'https://oauth.reddit.com/grants/installed_client'
+-    deviceId: string
++    deviceId: string,
++    permanent?: boolean,
+   }
+ 
+   export type AuthOnlyOptions = AuthOnlyCredentialsOptions | AuthOnlyInstalledOptions

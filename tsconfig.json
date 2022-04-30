@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "allowJs": true,
+    "module": "commonjs",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "noImplicitAny": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "strictNullChecks": true,
+    "rootDir": "./src",
+    "baseUrl": "./src",
+    "jsx": "react",
+    "paths": {
+      "~/*": [
+        "./*"
+      ],
+    },
+    "lib": [
+      "es2016",
+      "dom",
+      "es2018.promise"
+    ]
+  },
+  "include": [
+    "src/**/*",
+    "electron/reader.ts",
+    "reader.d.ts"
+  ]
+}

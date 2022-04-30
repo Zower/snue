@@ -1,0 +1,54 @@
+.comment-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+    margin-left: 25px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+
+    .body {
+        position: relative;
+        font-size: 15px;
+        font-weight: 300;
+        width: 98%;
+    }
+}
+
+.comment-highlight-color {
+    position: absolute;
+    height: 100%;
+    width: 7px;
+}
+
+.comment-divider {
+    position: absolute;
+    left: 7px;
+    top: 0px;
+    width: 500vh;
+    height: 1.5px;
+    background-color: #212530;
+}
+
+.highlighted {
+    background-color: #FFD295;
+}
+
+
+.comment-topbar-content {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 10px;
+     
+    .submission-info {
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .comment-number {
+        position: relative;
+        top: -5px;
+        font-weight: 400;
+    }
+}
