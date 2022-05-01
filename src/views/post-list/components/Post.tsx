@@ -16,7 +16,7 @@ export const PostItem = React.forwardRef<HTMLDivElement | null, PostProps>((prop
     return (
         <>
             <div style={{backgroundColor: props.highlighted ? context.theme.foreground : undefined, borderLeft: props.post.inner.over_18 ? "2px solid red" : undefined, paddingLeft: props.post.inner.over_18 ? "2.5%" : "3%"}} ref={ref} className={`post-sidebar-single`}>
-                <PostTopBar user={props.post.inner.author.name} subreddit={props.post.inner.subreddit_name_prefixed} score={props.post.inner.score} comments={props.post.inner.num_comments} />
+                <PostTopBar post={props.post} user={props.post.inner.author.name} subreddit={props.post.inner.subreddit_name_prefixed} score={props.post.inner.score} comments={props.post.inner.num_comments} />
                 <p style={{color: context.theme.text}} className="title">{props.post.inner.title}</p>
             </div >
         </>

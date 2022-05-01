@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {useKeyPress} from '~/common/utils';
-import {Post} from '~/common/post';
+import {Post, ReaderModeContent} from '~/common/post';
 import {VideoPlayer} from './components/VideoPlayer';
 import './content.less';
 import {CImage} from './components/Image';
@@ -17,7 +17,30 @@ export interface ContentProps {
 
 export const Content = (props: ContentProps) => {
     const [readerMode, setReaderMode] = React.useState<boolean>(true);
-    const [readerModeContent, setReaderModeContent] = React.useState(props.post.content.type === 'Link' ? props.post.content.readerModeContent : undefined);
+    const [readerModeContent, setReaderModeContent] = React.useState<ReaderModeContent | null>(null);
+    const [images, setImages] = React.useState<HTMLImageElement[] | null>(null);
+    const [currentImage, setCurrentImage] = React.useState<number>(0);
+
+    React.useEffect(() => {
+        setCurrentImage(0);
+
+        if (props.post.content.type === 'Album') {
+            if (props.post.content.images) {
+                setImages(props.post.content.images)
+            } else if (props.post.content.getImages) {
+                const handler = (urls: string[]) => {
+                    const images = urls.map((url) => {
+                        const image = new Image();
+                        image.src = url;
+                        return image;
+                    })
+                    setImages(images);
+                }
+
+                props.post.content.getImages(handler);
+            }
+        }
+    }, [props.post.inner.id])
 
     React.useEffect(() => {
         if (props.post.content.type === 'Link') {
@@ -45,8 +68,12 @@ export const Content = (props: ContentProps) => {
     }, [props.post.inner.id])
 
     useKeyPress(() => setReaderMode(old => !old), 'playPause');
+    useKeyPress(() => setCurrentImage(Math.min(images ? images.length - 1 : 0, currentImage + 1)), 'right');
+    useKeyPress(() => setCurrentImage(Math.max(0, currentImage - 1)), 'left');
 
     const type = props.post.content.type;
+    console.log(images ? images[currentImage] : 'arstar');
+    console.log(currentImage, images ? images.length : 'ar');
     if (type == "Text")
         return <ScrollableHTML unsafe_html={props.post.content.unsafe_html ?? "error content empty"} />;
     else if (type === "Link") {
@@ -60,8 +87,7 @@ export const Content = (props: ContentProps) => {
             } else if (readerModeContent.type === "NotLoaded") {
                 console.log("not loaded at content state")
                 return <h1>Press Ctrl Shift E</h1>
-            }
-            else {
+            } else {
                 return <h1>Could not parse... Switch view with Ctrl+Shift+E</h1>
             }
         } else {
@@ -74,6 +100,8 @@ export const Content = (props: ContentProps) => {
         }
     } else if (type === "Image") {
         return <CImage src={props.post.content.image.src} />;
+    } else if (type === "Album" && images) {
+        return <CImage src={images[currentImage].src} />;
     } else if (type === "Video") {
         return <VideoPlayer video={props.post.content} />;
     }

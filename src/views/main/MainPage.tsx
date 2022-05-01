@@ -11,6 +11,7 @@ import {defaultFilters, Filters, getFilters} from '../post-list/filters';
 import {Loading} from './Loading';
 import {CommentSection} from '../comments/CommentSection';
 import {VimModeProvider} from '../vaildMode';
+import {PostItem} from '../post-list/components/Post';
 
 export interface ModeConfig {
     previousMode: Mode;
@@ -87,7 +88,7 @@ export const MainPage = (props: MainPageProps) => {
                                 {renderSideBar(false)}
                             </>
                         }
-                        {mode.currentMode === 'COMMENTS' ?
+                        {mode.currentMode === 'COMMENTS' || (post.content.type === 'Text' && post.content.unsafe_html === '' || post.content.type === 'Text' && !post.content.unsafe_html) ?
                             // TODO Pop out
                             <VimModeProvider validMode='COMMENTS'>
                                 <CommentSection comments={post.inner.comments} setComments={(c) => post.inner.comments = c} setLoading={props.setLoading} />

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import ReactDOM from 'react-dom';
+import ReactHlsPlayer from 'react-hls-player';
 import {Video} from '~/common/post';
 import {useKeyPress} from '~/common/utils';
 import {SnuiContext} from '~/views/main';
@@ -54,7 +54,16 @@ export const VideoPlayer = (props: VideoPlayerProps) => {
     const video = props.video;
     return (
         <div className='content-container' style={{backgroundColor: theme.content_background}}>
-            <video className='video' ref={(vidRef != undefined) ? vidRef : null} controls autoPlay loop src={video.url} />
+            <ReactHlsPlayer
+                className='video'
+                src={video.url}
+                autoPlay
+                controls
+                loop
+                width="100%"
+                height="auto"
+                playerRef={vidRef}
+            />
         </div>
-    )
+    );
 }
